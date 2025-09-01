@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamLite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e5e7eb;
+        }
+        .container {
+            max-width: 960px;
+        }
+        video {
+            background-color: #000;
+            object-fit: contain;
+        }
+        textarea {
+            resize: none;
+            overflow-y: scroll;
+        }
+        .mode-button-active {
+            background-color: #3b82f6;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+    </style>
+</head>
+<body class="bg-gray-200 flex items-center justify-center min-h-screen p-4">
+
+    <div class="container mx-auto p-8 bg-white rounded-3xl shadow-2xl border border-gray-300">
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-2">StreamLite</h1>
+        <p class="text-center text-gray-600 mb-8">Stream and record your phone's camera for YouTube Shorts.</p>
+
+        <!-- Mode Selection Buttons -->
+        <div class="flex justify-center mb-10 space-x-4">
+            <button id="hostBtn" class="px-8 py-3 rounded-full font-medium transition-transform transform hover:scale-105 duration-200 bg-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Host (PC)
+            </button>
+            <button id="clientBtn" class="px-8 py-3 rounded-full font-medium transition-transform transform hover:scale-105 duration-200 bg-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Client (Phone)
+            </button>
+        </div>
+
+        <!-- Host (PC) Section -->
+        <div id="hostSection" class="hidden">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-6 text-center">Host: Receiving & Recording</h2>
+            <div class="flex flex-col items-center">
+                <!-- Video container with 9:16 aspect ratio -->
+                <div class="w-full max-w-sm aspect-[9/16] rounded-2xl shadow-xl overflow-hidden border-4 border-gray-400">
+                    <video id="remoteVideo" class="w-full h-full" autoplay playsinline></video>
+                </div>
+                <p class="mt-4 text-gray-500 text-base">Live Video Feed (from phone)</p>
+            </div>
+            
+            <!-- Recording Controls -->
+            <div class="mt-8 flex justify-center space-x-4">
+                <button id="recordBtn" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:bg-gray-400">
+                    Start Recording
+                </button>
+                <button id="stopBtn" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:bg-gray-400" disabled>
+                    Stop Recording
+                </button>
+                <button id="downloadBtn" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:bg-gray-400" disabled>
+                    Download Video
+                </button>
+            </div>
+            
+            <div class="mt-8">
+                <h3 class="text-xl font-medium text-gray-700 mb-4 text-center">Instructions:</h3>
+                <ol class="list-decimal list-inside text-gray-600 space-y-3">
+                    <li>Click 'Start Host' to get your **Offer** text.</li>
+                    <li>Copy the **Offer** text and send it to your phone.</li>
+                    <li>On your phone, paste the **Offer**, generate the **Answer**, and paste it back here.</li>
+                    <li>Click 'Connect' to begin the video stream.</li>
+                    <li>To record, click 'Start Recording'.</li>
+                    <li>When you're finished, click 'Stop Recording' and then 'Download Video' to save it.</li>
+                </ol>
+            </div>
+            
+            <div class="mt-8 grid md:grid-cols-2 gap-6">
+                <div>
+                    <label for="offerSd" class="block text-sm font-medium text-gray-700 mb-1">Generated Offer:</label>
+                    <textarea id="offerSd" rows="4" readonly class="mt-1 block w-full rounded-lg border-2 border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 text-sm bg-gray-50"></textarea>
+                    <button id="startHostBtn" class="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Start Host
+                    </button>
+                </div>
+                <div>
+                    <label for="answerSd" class="block text-sm font-medium text-gray-700 mb-1">Paste Answer Here:</label>
+                    <textarea id="answerSd" rows="4" class="mt-1 block w-full rounded-lg border-2 border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 text-sm"></textarea>
+                    <button id="connectBtn" class="mt-4 w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                        Connect
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Client (Phone) Section -->
+        <div id="clientSection" class="hidden">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-6 text-center">Client: Sending Video</h2>
+            <div class="flex flex-col items-center">
+                <div class="w-full max-w-sm aspect-[9/16] rounded-2xl shadow-xl overflow-hidden border-4 border-gray-400">
+                    <video id="localVideo" class="w-full h-full" autoplay muted playsinline></video>
+                </div>
+                <p class="mt-4 text-gray-500 text-base">Local Video (from your camera)</p>
+            </div>
+            
+            <div class="mt-8">
+                <h3 class="text-xl font-medium text-gray-700 mb-4 text-center">Instructions:</h3>
+                <ol class="list-decimal list-inside text-gray-600 space-y-3">
+                    <li>Click 'Start Client' and your browser will ask for camera permission.</li>
+                    <li>Paste the **Offer** text you received from the PC into the box below.</li>
+                    <li>Click 'Generate Answer' to create the response.</li>
+                    <li>Copy the **Answer** and send it back to the PC. The stream will begin automatically.</li>
+                </ol>
+            </div>
+            
+            <div class="mt-8 grid md:grid-cols-2 gap-6">
+                <div>
+                    <label for="offerSdClient" class="block text-sm font-medium text-gray-700 mb-1">Paste Offer Here:</label>
+                    <textarea id="offerSdClient" rows="4" class="mt-1 block w-full rounded-lg border-2 border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 text-sm"></textarea>
+                    <button id="generateAnswerBtn" class="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Generate Answer
+                    </button>
+                </div>
+                <div>
+                    <label for="answerSdClient" class="block text-sm font-medium text-gray-700 mb-1">Generated Answer:</label>
+                    <textarea id="answerSdClient" rows="4" readonly class="mt-1 block w-full rounded-lg border-2 border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 text-sm bg-gray-50"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Box for Feedback -->
+        <div id="messageBox" class="hidden mt-6 p-4 rounded-lg text-center font-medium transition-all duration-300"></div>
+    </div>
+
+    <script>
+        const hostBtn = document.getElementById('hostBtn');
+        const clientBtn = document.getElementById('clientBtn');
+        const hostSection = document.getElementById('hostSection');
+        const clientSection = document.getElementById('clientSection');
+
+        const remoteVideo = document.getElementById('remoteVideo');
+        const offerSd = document.getElementById('offerSd');
+        const answerSd = document.getElementById('answerSd');
+        const startHostBtn = document.getElementById('startHostBtn');
+        const connectBtn = document.getElementById('connectBtn');
+        const recordBtn = document.getElementById('recordBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        const localVideo = document.getElementById('localVideo');
+        const offerSdClient = document.getElementById('offerSdClient');
+        const answerSdClient = document.getElementById('answerSdClient');
+        const generateAnswerBtn = document.getElementById('generateAnswerBtn');
+
+        const messageBox = document.getElementById('messageBox');
+
+        let pc;
+        let localStream;
+        let mediaRecorder;
+        let recordedChunks = [];
+        let videoBlobUrl = null;
+
+        // Display a message in a non-disruptive way
+        function showMessage(message, isError = false) {
+            messageBox.textContent = message;
+            messageBox.classList.remove('hidden', 'bg-red-200', 'text-red-800', 'bg-green-200', 'text-green-800');
+            if (isError) {
+                messageBox.classList.add('bg-red-200', 'text-red-800');
+            } else {
+                messageBox.classList.add('bg-green-200', 'text-green-800');
+            }
+        }
+        
+        // Function to set up the peer connection
+        function setupPeerConnection() {
+            pc = new RTCPeerConnection({
+                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+            });
+
+            pc.onicecandidate = ({ candidate }) => {
+                if (candidate) {
+                    showMessage("ICE candidate generated. Please copy and exchange.");
+                } else {
+                    showMessage("All ICE candidates have been generated.");
+                }
+            };
+            
+            pc.onconnectionstatechange = () => {
+                showMessage(`Connection state: ${pc.connectionState}`);
+                if (pc.connectionState === 'connected') {
+                    recordBtn.disabled = false;
+                } else {
+                    recordBtn.disabled = true;
+                }
+            };
+
+            pc.ontrack = (event) => {
+                showMessage("Remote stream received!");
+                remoteVideo.srcObject = event.streams[0];
+            };
+        }
+
+        // Host side logic
+        async function startHost() {
+            showMessage("Starting as Host...", false);
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'user', 
+                        aspectRatio: 9/16,
+                    }, 
+                    audio: true 
+                });
+                
+                setupPeerConnection();
+                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                offerSd.value = JSON.stringify(pc.localDescription);
+                showMessage("Offer generated! Copy the text above and send it to the client device.", false);
+            } catch (err) {
+                console.error("Error starting host:", err);
+                showMessage(`Error: ${err.name} - Please grant camera access.`, true);
+            }
+        }
+        
+        // Client side logic
+        async function startClient() {
+            showMessage("Starting as Client...", false);
+            try {
+                // Request media from a camera with 9:16 aspect ratio
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'environment', // Use back camera
+                        aspectRatio: 9/16,
+                    }, 
+                    audio: true 
+                });
+                localVideo.srcObject = localStream;
+                showMessage("Camera access granted. Waiting for an Offer from the host.", false);
+            } catch (err) {
+                console.error("Error starting client:", err);
+                showMessage(`Error: ${err.name} - Please grant camera access.`, true);
+            }
+        }
+        
+        async function generateAnswer() {
+            showMessage("Generating Answer...", false);
+            try {
+                if (!pc) {
+                    setupPeerConnection();
+                    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+                }
+
+                const offer = JSON.parse(offerSdClient.value);
+                await pc.setRemoteDescription(new RTCSessionDescription(offer));
+                
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+                answerSdClient.value = JSON.stringify(pc.localDescription);
+                showMessage("Answer generated! Copy the text above and send it back to the host device.", false);
+            } catch (err) {
+                console.error("Error generating answer:", err);
+                showMessage(`Error: ${err.name} - Check the offer text.`, true);
+            }
+        }
+
+        async function connect() {
+            showMessage("Connecting...", false);
+            try {
+                const answer = JSON.parse(answerSd.value);
+                await pc.setRemoteDescription(new RTCSessionDescription(answer));
+                showMessage("Connected successfully! The stream should start shortly.", false);
+            } catch (err) {
+                console.error("Error connecting:", err);
+                showMessage(`Error: ${err.name} - Check the answer text.`, true);
+            }
+        }
+
+        function startRecording() {
+            if (remoteVideo.srcObject) {
+                recordBtn.disabled = true;
+                stopBtn.disabled = false;
+                downloadBtn.disabled = true;
+                recordedChunks = [];
+                const stream = remoteVideo.srcObject;
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                    videoBlobUrl = URL.createObjectURL(blob);
+                    downloadBtn.disabled = false;
+                    showMessage("Recording finished! Click 'Download Video' to save it.", false);
+                };
+
+                mediaRecorder.start();
+                showMessage("Recording started...", false);
+            } else {
+                showMessage("No video stream to record!", true);
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                recordBtn.disabled = false;
+                stopBtn.disabled = true;
+            }
+        }
+
+        function downloadVideo() {
+            if (videoBlobUrl) {
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = videoBlobUrl;
+                a.download = 'youtube_short_recording.webm';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(videoBlobUrl);
+                showMessage("Download complete!", false);
+            }
+        }
+
+        // UI Event Listeners
+        hostBtn.addEventListener('click', () => {
+            hostSection.classList.remove('hidden');
+            clientSection.classList.add('hidden');
+            hostBtn.classList.add('mode-button-active');
+            clientBtn.classList.remove('mode-button-active');
+        });
+        
+        clientBtn.addEventListener('click', () => {
+            clientSection.classList.remove('hidden');
+            hostSection.classList.add('hidden');
+            clientBtn.classList.add('mode-button-active');
+            hostBtn.classList.remove('mode-button-active');
+        });
+
+        startHostBtn.addEventListener('click', startHost);
+        connectBtn.addEventListener('click', connect);
+        generateAnswerBtn.addEventListener('click', generateAnswer);
+        recordBtn.addEventListener('click', startRecording);
+        stopBtn.addEventListener('click', stopRecording);
+        downloadBtn.addEventListener('click', downloadVideo);
+        
+        // Show host mode by default
+        hostBtn.click();
+    </script>
+</body>
+</html>
